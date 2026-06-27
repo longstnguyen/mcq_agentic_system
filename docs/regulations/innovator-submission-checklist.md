@@ -97,12 +97,12 @@ used in the final path.
 | --- | --- | --- |
 | Model at most 5B | Implemented | Qwen3-1.7B epoch 3 is selected; 9B is excluded from Docker |
 | One learned model | Implemented | Final runtime calls only the selected Qwen3-1.7B checkpoint |
-| 16GB VRAM | Budget smoke passed | End-to-end vLLM ran with an 11.5GB absolute budget and 16K context; exact 16GB Docker still required |
-| Offline inference | Image-level smoke passed | Container imports the pinned stack and finds local model assets under `--network none`; full GPU inference still requires a privileged NVIDIA Docker daemon |
+| 16GB VRAM | Budget smoke passed | The final image ran end to end with an approximately 11.5GB GPU budget and 16K context; the exact RTX 5060 Ti is not locally available |
+| Offline inference | GPU image smoke passed | The final image loaded vLLM 0.10.1.1, the base model, and the epoch-3 LoRA under `--network none`, then produced both CSV files |
 | Model resources local | Implemented at build | Base weights download during build; adapter is copied locally |
 | Retrieval resources | Not applicable | No corpus or index enters the final image |
 | Model/data licenses | Blocking audit | Base is Apache-2.0; declare adapter and training-data licenses |
-| `Dockerfile` CUDA 12.8 | Built | CUDA 12.8.1 runtime image built successfully with Python 3.12; image ID starts with `2e74f37f795a` |
+| `Dockerfile` CUDA 12.8 | Built and tested | CUDA 12.8.1, Python 3.12, and the runtime compiler required by Triton; image ID starts with `936607204059` |
 | Pinned `requirements.txt` | Implemented | The uv-compiled cu128 dependency tree pins Torch 2.7.1+cu128 and vLLM 0.10.1.1 |
 | `predict.py` | Implemented | Reads private test and writes both required CSV files |
 | `inference.sh` | Implemented | Starts local vLLM and runs prediction end to end |
@@ -147,10 +147,10 @@ The detailed license audit is in
 `docs/regulations/model-and-data-license-audit.md`.
 
 Local verification used the pinned dependency tree, vLLM 0.10.1.1, Qwen3 LoRA,
-BF16, a 16K context window, and an 11.5GB absolute GPU-memory budget. The full
-`inference.sh` path produced both required CSV files. The final 14.3GB image was
-built with a rootless Docker daemon and passed an offline package/model-asset
-smoke test. The final CUDA 12.8.1 image uses Torch 2.7.1+cu128 installed by uv
-with `--torch-backend=cu128`, as requested by the organizer. Rootless NVIDIA
-cgroup restrictions prevented a full GPU-container
-run, which must still be performed on the submission image before deployment.
+BF16, a 16K context window, and an approximately 11.5GB GPU-memory budget. The
+full `inference.sh` path ran inside the final CUDA 12.8.1 image with networking
+disabled and produced both required CSV files for long-context, numerical, and
+reading-comprehension smoke cases. Torch 2.7.1+cu128 is installed by uv with
+`--torch-backend=cu128`, as requested by the organizer. The smoke host uses an
+H200, so a final run on the organizer's exact RTX 5060 Ti remains outside the
+local verification scope.

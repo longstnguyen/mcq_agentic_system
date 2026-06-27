@@ -37,4 +37,9 @@ COPY predict.py inference.sh README.md LICENSE /code/
 
 RUN chmod +x /code/inference.sh
 
+# Triton compiles a small CUDA driver shim on first startup.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 CMD ["bash", "/code/inference.sh"]
