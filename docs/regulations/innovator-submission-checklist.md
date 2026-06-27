@@ -108,7 +108,7 @@ used in the final path.
 | Output validation | Implemented | Validates qids, order, row count, labels, and times |
 | README submission sections | Implemented | Documents flow, processing, resources, Docker, and verification |
 | Docker Hub image | Missing | Build, offline smoke-test, then push before the deadline |
-| Public frozen GitHub repo | Missing | Publish only after the final image and repository agree |
+| Public frozen GitHub repo | Published, not submitted | `main` and tag `submission-2026-06-27` point to the audited source; freeze only after submitting the form |
 
 ## Submission Smoke Test
 

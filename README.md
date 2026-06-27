@@ -1,9 +1,9 @@
 # ViTutor MCQ Submission System
 
-This directory contains the final offline submission runtime for the Vietnamese
-Student HackAIthon 2026 Innovator track. Research experiments remain in the
-repository for reproducibility, but Docker copies only the files required by
-the compliant runtime.
+This repository contains the final offline submission runtime for the
+Vietnamese Student HackAIthon 2026 Innovator track. Research experiments are
+kept outside the submission branch, and Docker copies only the files required
+by the compliant runtime.
 
 The final system uses exactly one learned model:
 
