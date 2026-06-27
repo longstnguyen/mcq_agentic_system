@@ -8,19 +8,25 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
-        python3 \
-        python3-pip \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3 /usr/local/bin/python
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL -o /tmp/miniforge.sh \
+        https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
+    && bash /tmp/miniforge.sh -b -p /opt/conda \
+    && rm /tmp/miniforge.sh \
+    && /opt/conda/bin/conda install -y python=3.12 pip=25.1.1 \
+    && /opt/conda/bin/conda clean -afy
+
+ENV PATH=/opt/conda/bin:${PATH}
 
 WORKDIR /code
 
 COPY requirements.txt /code/requirements.txt
-RUN python3 -m pip install --upgrade pip==25.1.1 \
-    && python3 -m pip install -r /code/requirements.txt
+RUN python -m pip install -r /code/requirements.txt
 
 # Network access is allowed during image construction. Runtime is fully offline.
-RUN HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 python3 -c \
+RUN HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 python -c \
     "from huggingface_hub import snapshot_download; snapshot_download('unsloth/Qwen3-1.7B', local_dir='/models/qwen3_1_7b_base')"
 
 COPY assets/checkpoints/qwen3_1_7b_epoch3 /code/assets/checkpoints/qwen3_1_7b_epoch3
