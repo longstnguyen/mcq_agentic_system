@@ -106,7 +106,6 @@ download the base model. Final inference requires no internet access.
 ## Offline Smoke Test
 
 ```bash
-mkdir -p output
 docker run --gpus all --ipc=host --network none \
   --name vitutor-submission \
   -v "$PWD/private_test.json:/code/private_test.json:ro" \
@@ -128,6 +127,10 @@ Expected files:
 `submission.csv` has columns `qid,answer`. `submission_time.csv` has columns
 `qid,answer,time`, where `time` measures the complete per-question solve path.
 Model startup is not included in an individual question's time.
+
+The organizer's target machine is an NVIDIA RTX 5060 Ti with 16GB VRAM and
+32GB system RAM. The documented `--ipc=host` flag is required for the vLLM
+runtime used by this image.
 
 ## Runtime Controls
 

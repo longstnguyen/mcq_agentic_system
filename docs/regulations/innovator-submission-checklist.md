@@ -29,7 +29,8 @@ supplemental Innovator notice supplied by the team.
 - Do not call closed model APIs, external model endpoints, search APIs, or data
   APIs during inference.
 - Expect the evaluation container to run without internet access.
-- Keep peak GPU memory below the organizer's 16GB VRAM limit.
+- Target the organizer's NVIDIA RTX 5060 Ti with 16GB VRAM and 32GB system
+  RAM.
 - Document `--ipc=host` in the reproduction command when serving with vLLM.
 - Use only open, appropriately licensed training and retrieval data.
 
@@ -115,15 +116,18 @@ used in the final path.
 
 ```bash
 docker build -t team_submission .
-docker run --rm --gpus all --network none \
+docker run --gpus all --ipc=host --network none \
+  --name team-submission \
   -v "$PWD/private_test.json:/code/private_test.json:ro" \
-  -v "$PWD/output:/code/output" \
   team_submission
+docker cp team-submission:/code/submission.csv ./submission.csv
+docker cp team-submission:/code/submission_time.csv ./submission_time.csv
+docker rm team-submission
 ```
 
 Verify that:
 
-- peak VRAM remains below 16GB;
+- peak VRAM remains below 16GB on an RTX 5060 Ti;
 - no network request occurs;
 - both CSV files contain every input qid exactly once and in input order;
 - each answer is one of the choices allowed for that item;
