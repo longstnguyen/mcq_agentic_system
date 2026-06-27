@@ -15,7 +15,7 @@ supplemental Innovator notice supplied by the team.
 
 - Push the Docker image before 23:59 UTC+7 on 27 June 2026.
 - Submit a public GitHub repository and do not modify it after submission.
-- Use a CUDA 12.2 base image when GPU inference is required.
+- Use a CUDA 12.8 or newer base image under the organizer's latest clarification.
 - Read `/code/private_test.json` at runtime.
 - Write `submission.csv` with columns `qid,answer`.
 - Write `submission_time.csv` with columns `qid,answer,time`.
@@ -30,6 +30,7 @@ supplemental Innovator notice supplied by the team.
   APIs during inference.
 - Expect the evaluation container to run without internet access.
 - Keep peak GPU memory below the organizer's 16GB VRAM limit.
+- Document `--ipc=host` in the reproduction command when serving with vLLM.
 - Use only open, appropriately licensed training and retrieval data.
 
 ## Organizer Clarification: 27 June 2026
@@ -100,8 +101,8 @@ used in the final path.
 | Model resources local | Implemented at build | Base weights download during build; adapter is copied locally |
 | Retrieval resources | Not applicable | No corpus or index enters the final image |
 | Model/data licenses | Blocking audit | Base is Apache-2.0; declare adapter and training-data licenses |
-| `Dockerfile` CUDA 12.2 | Built | CUDA 12.2.2 runtime image built successfully with Python 3.12; image ID starts with `b0d5481ef45e` |
-| Pinned `requirements.txt` | Implemented | Full 153-package tree is locked; vLLM is pinned to 0.8.5 |
+| `Dockerfile` CUDA 12.8 | Built | CUDA 12.8.1 runtime image built successfully with Python 3.12; image ID starts with `2e74f37f795a` |
+| Pinned `requirements.txt` | Implemented | The uv-compiled cu128 dependency tree pins Torch 2.7.1+cu128 and vLLM 0.10.1.1 |
 | `predict.py` | Implemented | Reads private test and writes both required CSV files |
 | `inference.sh` | Implemented | Starts local vLLM and runs prediction end to end |
 | Per-item timing | Implemented | Times each complete solve path separately |
@@ -133,7 +134,7 @@ Verify that:
 
 1. Confirm whether the restricted deterministic calculator is allowed.
 2. Declare the adapter license and audit all training-data licenses.
-3. Build the exact CUDA 12.2 Docker image with Docker daemon access.
+3. Run the exact CUDA 12.8/cu128 image with GPU access and `--ipc=host`.
 4. Run the image with no network and measure peak VRAM on an actual 16GB GPU.
 5. Validate both CSV files against the complete public test schema.
 6. Push the tested image and freeze the public repository.
@@ -141,9 +142,11 @@ Verify that:
 The detailed license audit is in
 `docs/regulations/model-and-data-license-audit.md`.
 
-Local verification used the pinned dependency tree, vLLM 0.8.5, Qwen3 LoRA,
+Local verification used the pinned dependency tree, vLLM 0.10.1.1, Qwen3 LoRA,
 BF16, a 16K context window, and an 11.5GB absolute GPU-memory budget. The full
 `inference.sh` path produced both required CSV files. The final 14.3GB image was
 built with a rootless Docker daemon and passed an offline package/model-asset
-smoke test. Rootless NVIDIA cgroup restrictions prevented a full GPU-container
+smoke test. The final CUDA 12.8.1 image uses Torch 2.7.1+cu128 installed by uv
+with `--torch-backend=cu128`, as requested by the organizer. Rootless NVIDIA
+cgroup restrictions prevented a full GPU-container
 run, which must still be performed on the submission image before deployment.

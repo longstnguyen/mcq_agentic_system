@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04
+FROM nvidia/cuda:12.8.1-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -11,19 +11,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL -o /tmp/miniforge.sh \
-        https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
-    && bash /tmp/miniforge.sh -b -p /opt/conda \
-    && rm /tmp/miniforge.sh \
-    && /opt/conda/bin/conda install -y python=3.12 pip=25.1.1 \
-    && /opt/conda/bin/conda clean -afy
+RUN curl -LsSf https://astral.sh/uv/0.11.25/install.sh \
+        | env UV_INSTALL_DIR=/usr/local/bin sh \
+    && UV_PYTHON_INSTALL_DIR=/opt/uv-python uv python install 3.12 \
+    && UV_PYTHON_INSTALL_DIR=/opt/uv-python uv venv --python 3.12 /opt/venv
 
-ENV PATH=/opt/conda/bin:${PATH}
+ENV PATH=/opt/venv/bin:/usr/local/bin:${PATH} \
+    UV_PYTHON_INSTALL_DIR=/opt/uv-python
 
 WORKDIR /code
 
 COPY requirements.txt /code/requirements.txt
-RUN python -m pip install -r /code/requirements.txt
+RUN uv pip sync --python /opt/venv/bin/python \
+        --torch-backend=cu128 \
+        --no-cache \
+        /code/requirements.txt
 
 # Network access is allowed during image construction. Runtime is fully offline.
 RUN HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 python -c \

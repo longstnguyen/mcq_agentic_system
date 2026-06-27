@@ -73,7 +73,7 @@ copied into the Docker image.
 
 ## Runtime Files
 
-- `Dockerfile`: CUDA 12.2 image build and offline model initialization.
+- `Dockerfile`: CUDA 12.8 image build, uv-based cu128 environment, and offline model initialization.
 - `requirements.txt`: pinned inference engine version.
 - `inference.sh`: starts local vLLM, waits for readiness, and runs prediction.
 - `predict.py`: official end-to-end entry point.
@@ -107,19 +107,22 @@ download the base model. Final inference requires no internet access.
 
 ```bash
 mkdir -p output
-docker run --rm --gpus all --network none \
+docker run --gpus all --ipc=host --network none \
+  --name vitutor-submission \
   -v "$PWD/private_test.json:/code/private_test.json:ro" \
-  -v "$PWD/output:/output" \
-  -e OUTPUT_DIR=/output \
   vitutor-mcq:final
+
+docker cp vitutor-submission:/code/submission.csv ./submission.csv
+docker cp vitutor-submission:/code/submission_time.csv ./submission_time.csv
+docker rm vitutor-submission
 ```
 
 Expected files:
 
 ```text
-output/submission.csv
-output/submission_time.csv
-output/responses.jsonl
+/code/submission.csv
+/code/submission_time.csv
+/code/responses.jsonl
 ```
 
 `submission.csv` has columns `qid,answer`. `submission_time.csv` has columns
@@ -133,8 +136,8 @@ Model startup is not included in an individual question's time.
 - `MAX_MODEL_LEN`: defaults to `16384` tokens.
 - `MODEL_DTYPE`: defaults to `bfloat16`, matching training. Use `half` only if
   the evaluation GPU does not support native bfloat16.
-- `MAX_TOKENS`: defaults to `2048`. On the pinned vLLM 0.8.5 stack, some
-  reasoning questions need nearly 2,000 tokens before emitting the final JSON.
+- `MAX_TOKENS`: defaults to `2048`. Local validation found reasoning questions
+  that need nearly 2,000 tokens before emitting the final JSON.
 - `TOOL_MAX_TOKENS`: defaults to `512` generated tokens.
 - `ENABLE_CALCULATOR`: defaults to `1`; set to `0` to disable the tool.
 - `OUTPUT_DIR`: defaults to `/code` as required by the organizer's template.
