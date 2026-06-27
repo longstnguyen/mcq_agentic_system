@@ -96,11 +96,11 @@ used in the final path.
 | Model at most 5B | Implemented | Qwen3-1.7B epoch 3 is selected; 9B is excluded from Docker |
 | One learned model | Implemented | Final runtime calls only the selected Qwen3-1.7B checkpoint |
 | 16GB VRAM | Budget smoke passed | End-to-end vLLM ran with an 11.5GB absolute budget and 16K context; exact 16GB Docker still required |
-| Offline inference | Implemented, unverified in Docker | Runtime sets offline flags and loads local assets; test image with `--network none` |
+| Offline inference | Image-level smoke passed | Container imports the pinned stack and finds local model assets under `--network none`; full GPU inference still requires a privileged NVIDIA Docker daemon |
 | Model resources local | Implemented at build | Base weights download during build; adapter is copied locally |
 | Retrieval resources | Not applicable | No corpus or index enters the final image |
 | Model/data licenses | Blocking audit | Base is Apache-2.0; declare adapter and training-data licenses |
-| `Dockerfile` CUDA 12.2 | Implemented, unbuilt | Build and test the exact final image |
+| `Dockerfile` CUDA 12.2 | Built | CUDA 12.2.2 runtime image built successfully with Python 3.12; image ID starts with `b0d5481ef45e` |
 | Pinned `requirements.txt` | Implemented | Full 153-package tree is locked; vLLM is pinned to 0.8.5 |
 | `predict.py` | Implemented | Reads private test and writes both required CSV files |
 | `inference.sh` | Implemented | Starts local vLLM and runs prediction end to end |
@@ -143,6 +143,7 @@ The detailed license audit is in
 
 Local verification used the pinned dependency tree, vLLM 0.8.5, Qwen3 LoRA,
 BF16, a 16K context window, and an 11.5GB absolute GPU-memory budget. The full
-`inference.sh` path produced both required CSV files. Docker itself could not be
-built in the current account because access to `/var/run/docker.sock` requires
-sudo credentials.
+`inference.sh` path produced both required CSV files. The final 14.3GB image was
+built with a rootless Docker daemon and passed an offline package/model-asset
+smoke test. Rootless NVIDIA cgroup restrictions prevented a full GPU-container
+run, which must still be performed on the submission image before deployment.
